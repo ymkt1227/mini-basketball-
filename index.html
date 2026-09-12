@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>8チーム総当たり 順位表</title>
+  <title>8チーム総当たり 順位表・スコア管理</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -14,7 +14,7 @@
     }
     h1 {
       text-align: center;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       margin-bottom: 20px;
     }
     .container {
@@ -26,12 +26,12 @@
     }
     .court-section {
       background: white;
-      padding: 20px;
+      padding: 15px;
       border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
     .court-title {
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       font-weight: bold;
       margin-bottom: 15px;
       padding-bottom: 8px;
@@ -43,20 +43,52 @@
       color: #28a745;
     }
     h3 {
-      font-size: 1.1rem;
+      font-size: 1rem;
       margin-top: 15px;
       margin-bottom: 10px;
+    }
+    .team-setting-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .team-input-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.85rem;
+    }
+    .team-name-input {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    .btn-apply {
+      width: 100%;
+      padding: 8px;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .table-wrapper {
+      overflow-x: auto;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 15px;
+      font-size: 0.85rem;
     }
     th, td {
       border: 1px solid #e0e0e0;
-      padding: 10px;
+      padding: 8px 4px;
       text-align: center;
-      font-size: 0.95rem;
     }
     th {
       background-color: #f8f9fa;
@@ -66,37 +98,35 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px;
+      padding: 10px 0;
       border-bottom: 1px solid #eee;
-      gap: 10px;
+      gap: 5px;
     }
     .match-team {
       flex: 1;
       font-weight: bold;
-      text-align: center;
+      font-size: 0.85rem;
     }
-    .btn-group {
+    .match-team.left { text-align: right; }
+    .match-team.right { text-align: left; }
+    .score-inputs {
       display: flex;
-      gap: 5px;
+      align-items: center;
+      gap: 4px;
     }
-    button {
-      padding: 6px 12px;
-      border: 1px solid #ccc;
-      background: #f8f9fa;
-      border-radius: 6px;
-      cursor: pointer;
+    .score-input {
+      width: 45px;
+      height: 35px;
+      text-align: center;
+      font-size: 1.1rem;
       font-weight: bold;
-      transition: all 0.2s;
+      border: 1px solid #ccc;
+      border-radius: 6px;
     }
-    button.win {
-      background-color: #28a745;
-      color: white;
-      border-color: #28a745;
-    }
-    button.lose {
-      background-color: #dc3545;
-      color: white;
-      border-color: #dc3545;
+    .score-input:focus {
+      border-color: #007bff;
+      outline: none;
+      background-color: #eef6ff;
     }
     .rank-1 { background-color: #fff3cd; font-weight: bold; }
     .rank-2 { background-color: #e2e3e5; }
@@ -105,56 +135,81 @@
 </head>
 <body>
 
-  <h1>🏆 8チーム総当たり対戦表・順位表</h1>
+  <h1>🏆 ミニバス総当たり 順位表</h1>
 
   <div class="container">
     <!-- コートA -->
     <div class="court-section court-a">
-      <div class="court-title">コート A</div>
+      <div class="court-title">Aコート</div>
       
-      <h3>【順位表】</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>順位</th>
-            <th>チーム名</th>
-            <th>勝</th>
-            <th>負</th>
-            <th>試合数</th>
-          </tr>
-        </thead>
-        <tbody id="standings-A"></tbody>
-      </table>
+      <h3>【チーム名設定】</h3>
+      <div class="team-setting-grid">
+        <div class="team-input-group">1: <input type="text" id="name-A1" class="team-name-input" value="チーム A1"></div>
+        <div class="team-input-group">2: <input type="text" id="name-A2" class="team-name-input" value="チーム A2"></div>
+        <div class="team-input-group">3: <input type="text" id="name-A3" class="team-name-input" value="チーム A3"></div>
+        <div class="team-input-group">4: <input type="text" id="name-A4" class="team-name-input" value="チーム A4"></div>
+      </div>
+      <button class="btn-apply" onclick="applyTeamNames('A')">チーム名を更新</button>
 
-      <h3>【対戦結果入力】</h3>
+      <h3>【順位表】</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>順位</th>
+              <th>チーム</th>
+              <th>勝</th>
+              <th>負</th>
+              <th>得点</th>
+              <th>失点</th>
+              <th>差</th>
+            </tr>
+          </thead>
+          <tbody id="standings-A"></tbody>
+        </table>
+      </div>
+
+      <h3>【スコア入力】</h3>
       <div id="matches-A"></div>
     </div>
 
     <!-- コートB -->
     <div class="court-section court-b">
-      <div class="court-title">コート B</div>
+      <div class="court-title">Bコート</div>
       
-      <h3>【順位表】</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>順位</th>
-            <th>チーム名</th>
-            <th>勝</th>
-            <th>負</th>
-            <th>試合数</th>
-          </tr>
-        </thead>
-        <tbody id="standings-B"></tbody>
-      </table>
+      <h3>【チーム名設定】</h3>
+      <div class="team-setting-grid">
+        <div class="team-input-group">1: <input type="text" id="name-B1" class="team-name-input" value="チーム B1"></div>
+        <div class="team-input-group">2: <input type="text" id="name-B2" class="team-name-input" value="チーム B2"></div>
+        <div class="team-input-group">3: <input type="text" id="name-B3" class="team-name-input" value="チーム B3"></div>
+        <div class="team-input-group">4: <input type="text" id="name-B4" class="team-name-input" value="チーム B4"></div>
+      </div>
+      <button class="btn-apply" onclick="applyTeamNames('B')">チーム名を更新</button>
 
-      <h3>【対戦結果入力】</h3>
+      <h3>【順位表】</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>順位</th>
+              <th>チーム</th>
+              <th>勝</th>
+              <th>負</th>
+              <th>得点</th>
+              <th>失点</th>
+              <th>差</th>
+            </tr>
+          </thead>
+          <tbody id="standings-B"></tbody>
+        </table>
+      </div>
+
+      <h3>【スコア入力】</h3>
       <div id="matches-B"></div>
     </div>
   </div>
 
   <script>
-    // 初期チームデータ
     const courtsData = {
       A: [
         { id: 'A1', name: 'チーム A1' },
@@ -170,10 +225,8 @@
       ]
     };
 
-    // 試合結果を記録するオブジェクト key: "Team1_vs_Team2", value: "Team1" or "Team2"
-    const matchResults = {};
+    const matchScores = {};
 
-    // 総当たりの対戦カード生成 (4チームの場合6試合)
     function generateMatches(teams) {
       const matches = [];
       for (let i = 0; i < teams.length; i++) {
@@ -184,97 +237,128 @@
       return matches;
     }
 
-    // 試合結果の設定
-    function setWinner(team1Id, team2Id, winnerId) {
+    function applyTeamNames(court) {
+      courtsData[court].forEach(t => {
+        const inputVal = document.getElementById(`name-${t.id}`).value;
+        if (inputVal.trim() !== "") {
+          t.name = inputVal.trim();
+        }
+      });
+      // 対戦入力表示のチーム名を強制再描画
+      const matchesEl = document.getElementById(`matches-${court}`);
+      delete matchesEl.dataset.initialized;
+      updateUI();
+    }
+
+    function onScoreChange(team1Id, team2Id, score1Val, score2Val) {
       const matchKey = `${team1Id}_vs_${team2Id}`;
-      if (matchResults[matchKey] === winnerId) {
-        delete matchResults[matchKey]; // 同じボタンを再度押したらキャンセル
+      const s1 = parseInt(score1Val, 10);
+      const s2 = parseInt(score2Val, 10);
+
+      if (!isNaN(s1) && !isNaN(s2)) {
+        matchScores[matchKey] = { s1, s2 };
       } else {
-        matchResults[matchKey] = winnerId;
+        delete matchScores[matchKey];
       }
       updateUI();
     }
 
-    // 順位表と対戦表の再描画
     function updateUI() {
       ['A', 'B'].forEach(court => {
         const teams = courtsData[court];
         const matches = generateMatches(teams);
         
-        // 成績初期化
         const stats = {};
         teams.forEach(t => {
-          stats[t.id] = { ...t, wins: 0, losses: 0, played: 0, headToHead: {} };
+          stats[t.id] = { ...t, wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0, diff: 0 };
         });
 
-        // 試合結果の集計
         matches.forEach(([t1, t2]) => {
           const matchKey = `${t1.id}_vs_${t2.id}`;
-          const winnerId = matchResults[matchKey];
-          if (winnerId) {
-            const loserId = (winnerId === t1.id) ? t2.id : t1.id;
-            stats[winnerId].wins++;
-            stats[winnerId].played++;
-            stats[loserId].losses++;
-            stats[loserId].played++;
-            stats[winnerId].headToHead[loserId] = 1; // 直接対決の勝敗記録
-            stats[loserId].headToHead[winnerId] = -1;
+          const result = matchScores[matchKey];
+          if (result) {
+            const { s1, s2 } = result;
+            stats[t1.id].pointsFor += s1;
+            stats[t1.id].pointsAgainst += s2;
+            stats[t2.id].pointsFor += s2;
+            stats[t2.id].pointsAgainst += s1;
+
+            if (s1 > s2) {
+              stats[t1.id].wins++;
+              stats[t2.id].losses++;
+            } else if (s2 > s1) {
+              stats[t2.id].wins++;
+              stats[t1.id].losses++;
+            }
           }
         });
 
-        // 順位付けロジック
-        const sortedTeams = Object.values(stats).sort((a, b) => {
-          // 1. 勝利数で比較
-          if (b.wins !== a.wins) {
-            return b.wins - a.wins;
-          }
-          // 2. 同点の場合、直接対決の結果で比較
-          if (a.headToHead[b.id]) {
-            return b.headToHead[a.id] - a.headToHead[b.id];
-          }
-          return 0;
+        const sortedTeams = Object.values(stats).map(t => {
+          t.diff = t.pointsFor - t.pointsAgainst;
+          return t;
+        }).sort((a, b) => {
+          if (b.wins !== a.wins) return b.wins - a.wins;
+          if (b.diff !== a.diff) return b.diff - a.diff;
+          return b.pointsFor - a.pointsFor;
         });
 
-        // 順位表HTML生成
         const standingsEl = document.getElementById(`standings-${court}`);
         standingsEl.innerHTML = sortedTeams.map((t, index) => {
           const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+          const diffStr = t.diff > 0 ? `+${t.diff}` : t.diff;
           return `
             <tr class="${rankClass}">
               <td>${index + 1}</td>
               <td>${t.name}</td>
               <td>${t.wins}</td>
               <td>${t.losses}</td>
-              <td>${t.played}</td>
+              <td>${t.pointsFor}</td>
+              <td>${t.pointsAgainst}</td>
+              <td>${diffStr}</td>
             </tr>
           `;
         }).join('');
 
-        // 対戦結果入力画面HTML生成
         const matchesEl = document.getElementById(`matches-${court}`);
-        matchesEl.innerHTML = matches.map(([t1, t2]) => {
-          const matchKey = `${t1.id}_vs_${t2.id}`;
-          const winnerId = matchResults[matchKey];
+        if (!matchesEl.dataset.initialized) {
+          matchesEl.innerHTML = matches.map(([t1, t2]) => {
+            const matchKey = `${t1.id}_vs_${t2.id}`;
+            const existingScore = matchScores[matchKey] || {};
+            const val1 = existingScore.s1 !== undefined ? existingScore.s1 : '';
+            const val2 = existingScore.s2 !== undefined ? existingScore.s2 : '';
 
-          return `
-            <div class="match-row">
-              <span class="match-team">${t1.name}</span>
-              <div class="btn-group">
-                <button class="${winnerId === t1.id ? 'win' : ''}" onclick="setWinner('${t1.id}', '${t2.id}', '${t1.id}')">
-                  ${winnerId === t1.id ? '勝' : '勝'}
-                </button>
-                <button class="${winnerId === t2.id ? 'win' : ''}" onclick="setWinner('${t1.id}', '${t2.id}', '${t2.id}')">
-                  ${winnerId === t2.id ? '勝' : '勝'}
-                </button>
+            return `
+              <div class="match-row">
+                <span class="match-team left" id="label-${matchKey}-1">${t1.name}</span>
+                <div class="score-inputs">
+                  <input type="number" pattern="\\d*" class="score-input" id="input-${matchKey}-1" value="${val1}" oninput="handleInput('${t1.id}', '${t2.id}')">
+                  <span>-</span>
+                  <input type="number" pattern="\\d*" class="score-input" id="input-${matchKey}-2" value="${val2}" oninput="handleInput('${t1.id}', '${t2.id}')">
+                </div>
+                <span class="match-team right" id="label-${matchKey}-2">${t2.name}</span>
               </div>
-              <span class="match-team">${t2.name}</span>
-            </div>
-          `;
-        }).join('');
+            `;
+          }).join('');
+          matchesEl.dataset.initialized = "true";
+        } else {
+          matches.forEach(([t1, t2]) => {
+            const matchKey = `${t1.id}_vs_${t2.id}`;
+            const l1 = document.getElementById(`label-${matchKey}-1`);
+            const l2 = document.getElementById(`label-${matchKey}-2`);
+            if (l1) l1.textContent = t1.name;
+            if (l2) l2.textContent = t2.name;
+          });
+        }
       });
     }
 
-    // 初期表示
+    function handleInput(t1Id, t2Id) {
+      const matchKey = `${t1Id}_vs_${t2Id}`;
+      const val1 = document.getElementById(`input-${matchKey}-1`).value;
+      const val2 = document.getElementById(`input-${matchKey}-2`).value;
+      onScoreChange(t1Id, t2Id, val1, val2);
+    }
+
     updateUI();
   </script>
 </body>
