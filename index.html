@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8チーム総当たり 順位表</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 15px;
+      background-color: #f4f6f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    .court-section {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    .court-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 3px solid #007bff;
+      color: #007bff;
+    }
+    .court-b .court-title {
+      border-color: #28a745;
+      color: #28a745;
+    }
+    h3 {
+      font-size: 1.1rem;
+      margin-top: 15px;
+      margin-bottom: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+    th, td {
+      border: 1px solid #e0e0e0;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+    th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    .match-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      gap: 10px;
+    }
+    .match-team {
+      flex: 1;
+      font-weight: bold;
+      text-align: center;
+    }
+    .btn-group {
+      display: flex;
+      gap: 5px;
+    }
+    button {
+      padding: 6px 12px;
+      border: 1px solid #ccc;
+      background: #f8f9fa;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    button.win {
+      background-color: #28a745;
+      color: white;
+      border-color: #28a745;
+    }
+    button.lose {
+      background-color: #dc3545;
+      color: white;
+      border-color: #dc3545;
+    }
+    .rank-1 { background-color: #fff3cd; font-weight: bold; }
+    .rank-2 { background-color: #e2e3e5; }
+    .rank-3 { background-color: #f8d7da; }
+  </style>
+</head>
+<body>
+
+  <h1>🏆 8チーム総当たり対戦表・順位表</h1>
+
+  <div class="container">
+    <!-- コートA -->
+    <div class="court-section court-a">
+      <div class="court-title">コート A</div>
+      
+      <h3>【順位表】</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>順位</th>
+            <th>チーム名</th>
+            <th>勝</th>
+            <th>負</th>
+            <th>試合数</th>
+          </tr>
+        </thead>
+        <tbody id="standings-A"></tbody>
+      </table>
+
+      <h3>【対戦結果入力】</h3>
+      <div id="matches-A"></div>
+    </div>
+
+    <!-- コートB -->
+    <div class="court-section court-b">
+      <div class="court-title">コート B</div>
+      
+      <h3>【順位表】</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>順位</th>
+            <th>チーム名</th>
+            <th>勝</th>
+            <th>負</th>
+            <th>試合数</th>
+          </tr>
+        </thead>
+        <tbody id="standings-B"></tbody>
+      </table>
+
+      <h3>【対戦結果入力】</h3>
+      <div id="matches-B"></div>
+    </div>
+  </div>
+
+  <script>
+    // 初期チームデータ
+    const courtsData = {
+      A: [
+        { id: 'A1', name: 'チーム A1' },
+        { id: 'A2', name: 'チーム A2' },
+        { id: 'A3', name: 'チーム A3' },
+        { id: 'A4', name: 'チーム A4' }
+      ],
+      B: [
+        { id: 'B1', name: 'チーム B1' },
+        { id: 'B2', name: 'チーム B2' },
+        { id: 'B3', name: 'チーム B3' },
+        { id: 'B4', name: 'チーム B4' }
+      ]
+    };
+
+    // 試合結果を記録するオブジェクト key: "Team1_vs_Team2", value: "Team1" or "Team2"
+    const matchResults = {};
+
+    // 総当たりの対戦カード生成 (4チームの場合6試合)
+    function generateMatches(teams) {
+      const matches = [];
+      for (let i = 0; i < teams.length; i++) {
+        for (let j = i + 1; j < teams.length; j++) {
+          matches.push([teams[i], teams[j]]);
+        }
+      }
+      return matches;
+    }
+
+    // 試合結果の設定
+    function setWinner(team1Id, team2Id, winnerId) {
+      const matchKey = `${team1Id}_vs_${team2Id}`;
+      if (matchResults[matchKey] === winnerId) {
+        delete matchResults[matchKey]; // 同じボタンを再度押したらキャンセル
+      } else {
+        matchResults[matchKey] = winnerId;
+      }
+      updateUI();
+    }
+
+    // 順位表と対戦表の再描画
+    function updateUI() {
+      ['A', 'B'].forEach(court => {
+        const teams = courtsData[court];
+        const matches = generateMatches(teams);
+        
+        // 成績初期化
+        const stats = {};
+        teams.forEach(t => {
+          stats[t.id] = { ...t, wins: 0, losses: 0, played: 0, headToHead: {} };
+        });
+
+        // 試合結果の集計
+        matches.forEach(([t1, t2]) => {
+          const matchKey = `${t1.id}_vs_${t2.id}`;
+          const winnerId = matchResults[matchKey];
+          if (winnerId) {
+            const loserId = (winnerId === t1.id) ? t2.id : t1.id;
+            stats[winnerId].wins++;
+            stats[winnerId].played++;
+            stats[loserId].losses++;
+            stats[loserId].played++;
+            stats[winnerId].headToHead[loserId] = 1; // 直接対決の勝敗記録
+            stats[loserId].headToHead[winnerId] = -1;
+          }
+        });
+
+        // 順位付けロジック
+        const sortedTeams = Object.values(stats).sort((a, b) => {
+          // 1. 勝利数で比較
+          if (b.wins !== a.wins) {
+            return b.wins - a.wins;
+          }
+          // 2. 同点の場合、直接対決の結果で比較
+          if (a.headToHead[b.id]) {
+            return b.headToHead[a.id] - a.headToHead[b.id];
+          }
+          return 0;
+        });
+
+        // 順位表HTML生成
+        const standingsEl = document.getElementById(`standings-${court}`);
+        standingsEl.innerHTML = sortedTeams.map((t, index) => {
+          const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+          return `
+            <tr class="${rankClass}">
+              <td>${index + 1}</td>
+              <td>${t.name}</td>
+              <td>${t.wins}</td>
+              <td>${t.losses}</td>
+              <td>${t.played}</td>
+            </tr>
+          `;
+        }).join('');
+
+        // 対戦結果入力画面HTML生成
+        const matchesEl = document.getElementById(`matches-${court}`);
+        matchesEl.innerHTML = matches.map(([t1, t2]) => {
+          const matchKey = `${t1.id}_vs_${t2.id}`;
+          const winnerId = matchResults[matchKey];
+
+          return `
+            <div class="match-row">
+              <span class="match-team">${t1.name}</span>
+              <div class="btn-group">
+                <button class="${winnerId === t1.id ? 'win' : ''}" onclick="setWinner('${t1.id}', '${t2.id}', '${t1.id}')">
+                  ${winnerId === t1.id ? '勝' : '勝'}
+                </button>
+                <button class="${winnerId === t2.id ? 'win' : ''}" onclick="setWinner('${t1.id}', '${t2.id}', '${t2.id}')">
+                  ${winnerId === t2.id ? '勝' : '勝'}
+                </button>
+              </div>
+              <span class="match-team">${t2.name}</span>
+            </div>
+          `;
+        }).join('');
+      });
+    }
+
+    // 初期表示
+    updateUI();
+  </script>
+</body>
+</html>
